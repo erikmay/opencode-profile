@@ -86,6 +86,7 @@ test_make_empty() {
   assert_ok
   assert_file_contains "$(profiles_dir)/empty.json" '{}'
   [[ ! -e "$(auth_dir)/auth.json" ]] || fail "did not expect auth.json to exist after make <name>"
+  assert_output_contains "opencode-profile switch empty"
 }
 
 test_regular_auth_make_current_and_which() {
@@ -187,16 +188,35 @@ test_duplicate_and_invalid_name() {
   assert_output_contains "invalid profile name 'bad/name'"
 }
 
-test_relative_symlink_make_current() {
+test_second_account_writes_to_switched_profile() {
+  reset_home
+  mkdir -p "$(auth_dir)"
+  printf '%s' '{"token":"first"}' > "$(auth_dir)/auth.json"
+
+  run_script "${repo_root}" make codex-1 --current
+  assert_ok
+  assert_file_contains "$(profiles_dir)/codex-1.json" '{"token":"first"}'
+
+  run_script "${repo_root}" make codex-2
+  assert_ok
+  run_script "${repo_root}" switch codex-2
+  assert_ok
+
+  printf '%s' '{"token":"second"}' > "$(auth_dir)/auth.json"
+  assert_file_contains "$(profiles_dir)/codex-1.json" '{"token":"first"}'
+  assert_file_contains "$(profiles_dir)/codex-2.json" '{"token":"second"}'
+}
+
+test_managed_symlink_make_current_is_refused() {
   reset_home
   mkdir -p "$(auth_dir)/profiles"
   printf '%s' '{"token":"seed"}' > "$(auth_dir)/profiles/source.json"
   ln -s profiles/source.json "$(auth_dir)/auth.json"
 
   run_script "$(auth_dir)" make relative --current
-  assert_ok
-  assert_file_contains "$(profiles_dir)/relative.json" '{"token":"seed"}'
-  assert_symlink_target "$(auth_dir)/auth.json" "${home}/.local/share/opencode/profiles/relative.json"
+  assert_fail
+  assert_output_contains "auth.json is already managed by profile 'source'"
+  [[ ! -e "$(profiles_dir)/relative.json" ]] || fail "did not expect duplicate profile to be created"
 }
 
 tests=(
@@ -205,7 +225,8 @@ tests=(
   test_switch_list_rename
   test_delete_safety
   test_duplicate_and_invalid_name
-  test_relative_symlink_make_current
+  test_second_account_writes_to_switched_profile
+  test_managed_symlink_make_current_is_refused
 )
 
 for test in "${tests[@]}"; do

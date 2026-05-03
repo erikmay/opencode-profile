@@ -111,13 +111,12 @@ cmd_make() {
   if ${set_current}; then
     # Copy current auth.json into the profile
     if [[ -L "${AUTH_FILE}" ]]; then
-      local resolved
-      resolved="$(readlink "${AUTH_FILE}" 2> /dev/null || true)"
-      resolved="$(resolve_auth_symlink_target "${resolved}")"
-      if [[ ! -f "${resolved}" ]]; then
-        die "auth.json symlink is dangling (points to '${resolved}'). Run /connect in opencode first."
+      local current
+      current="$(active_profile)"
+      if [[ -n "${current}" ]]; then
+        die "auth.json is already managed by profile '${current}'. To add another account, run 'opencode-profile make ${name}', then 'opencode-profile switch ${name}', restart opencode, and run /connect."
       fi
-      cp "${resolved}" "${PROFILES_DIR}/${name}.json"
+      die "auth.json is already a profile symlink. Switch to or create the target profile before running /connect."
     elif [[ -f "${AUTH_FILE}" ]]; then
       cp "${AUTH_FILE}" "${PROFILES_DIR}/${name}.json"
     else
@@ -134,7 +133,7 @@ cmd_make() {
     # Create an empty placeholder profile
     echo '{}' > "${PROFILES_DIR}/${name}.json"
     success "created empty profile '${name}'."
-    info "run /connect in opencode, then 'opencode-profile make ${name} --current' or switch to it and /connect."
+    info "run 'opencode-profile switch ${name}', restart opencode, then run /connect."
   fi
 }
 
@@ -275,8 +274,8 @@ cmd_help() {
   printf '%s\n' "  opencode-profile <command> [args]"
   printf '\n'
   printf '%b\n' "${BOLD}COMMANDS${RESET}"
-  printf '%s\n' "  make <name> [--current]    Create a profile from current auth.json (--current)"
-  printf '%s\n' "                             or an empty placeholder (without --current)"
+  printf '%s\n' "  make <name> [--current]    Save regular auth.json (--current)"
+  printf '%s\n' "                             or create an empty profile for a new account"
   printf '%s\n' "  switch <name>              Switch to a different profile"
   printf '%s\n' "  list                       List all profiles"
   printf '%s\n' "  which                      Show the active profile name"
@@ -287,10 +286,10 @@ cmd_help() {
   printf '%b\n' "${BOLD}SETUP${RESET}"
   printf '%s\n' "  1. /connect in opencode with account A"
   printf '%s\n' "  2. opencode-profile make work --current"
-  printf '%s\n' "  3. /connect in opencode with account B"
-  printf '%s\n' "  4. opencode-profile make personal --current"
-  printf '%s\n' "  5. opencode-profile switch work"
-  printf '%s\n' "  6. restart opencode"
+  printf '%s\n' "  3. opencode-profile make personal"
+  printf '%s\n' "  4. opencode-profile switch personal"
+  printf '%s\n' "  5. restart opencode and /connect with account B"
+  printf '%s\n' "  6. opencode-profile switch work"
   printf '\n'
   printf '%b\n' "${BOLD}FILES${RESET}"
   printf '%s\n' "  ${AUTH_FILE}        (symlink to active profile)"

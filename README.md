@@ -22,9 +22,11 @@ Make sure `~/.local/bin` is on your `PATH`, then run `opencode-profile ...` from
 # 2. Save it as a profile
 opencode-profile make work --current
 
-# 3. Open opencode → /connect → OpenAI → ChatGPT Plus/Pro → sign in with account B
-# 4. Save it as a profile
-opencode-profile make personal --current
+# 3. Prepare an empty profile for account B
+opencode-profile make personal
+opencode-profile switch personal
+
+# 4. Restart opencode, then run /connect and sign in with account B
 ```
 
 You now have two profiles. Switch between them anytime:
@@ -38,8 +40,8 @@ opencode-profile switch work
 
 | Command | Description |
 |---|---|
-| `make <name> --current` | Save the current `auth.json` as a named profile and set it active |
-| `make <name>` | Create an empty placeholder profile |
+| `make <name> --current` | Save a regular, unmanaged `auth.json` as a named profile and set it active |
+| `make <name>` | Create an empty placeholder profile for a new account |
 | `switch <name>` | Switch to a profile by repointing `auth.json` |
 | `list` | List all profiles; the active one is marked `(active)` |
 | `which` | Print the active profile name. If `auth.json` is still a regular file, it reports that no profile is active yet. |
@@ -48,6 +50,8 @@ opencode-profile switch work
 | `help` | Show help |
 
 Aliases: `ls` for `list`, `rm` for `delete`, `mv` for `rename`.
+
+Important: after the first profile is active, `auth.json` is a symlink. To add another account, create and switch to an empty profile before running `/connect`. If you run `/connect` while the old profile is active, OpenCode will update that old profile.
 
 ## How it works
 
