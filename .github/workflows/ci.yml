@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shell tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt
+
+      - name: Syntax check
+        run: |
+          bash -n opencode-profile tests/opencode-profile.test.sh
+          shellcheck opencode-profile tests/opencode-profile.test.sh
+          shfmt -d -i 2 -ci -sr opencode-profile tests/opencode-profile.test.sh
+
+      - name: Run tests
+        run: tests/opencode-profile.test.sh

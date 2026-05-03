@@ -1,4 +1,4 @@
-# oc-profile
+# opencode-profile
 
 Switch between multiple OpenAI subscription accounts (ChatGPT Plus/Pro) in [OpenCode](https://opencode.ai).
 
@@ -6,29 +6,31 @@ OpenCode stores a single set of OAuth credentials per provider. This script lets
 
 ## Install
 
+Install it to a user-local bin directory:
+
 ```bash
-# Copy somewhere on your PATH
-cp oc-profile /usr/local/bin/
+mkdir -p ~/.local/bin
+install -m 0755 opencode-profile ~/.local/bin/opencode-profile
 ```
 
-Or just run it directly from wherever you cloned it.
+Make sure `~/.local/bin` is on your `PATH`, then run `opencode-profile ...` from anywhere.
 
 ## Setup
 
 ```bash
 # 1. Open opencode → /connect → OpenAI → ChatGPT Plus/Pro → sign in with account A
 # 2. Save it as a profile
-oc-profile make work --current
+opencode-profile make work --current
 
 # 3. Open opencode → /connect → OpenAI → ChatGPT Plus/Pro → sign in with account B
 # 4. Save it as a profile
-oc-profile make personal --current
+opencode-profile make personal --current
 ```
 
 You now have two profiles. Switch between them anytime:
 
 ```bash
-oc-profile switch work
+opencode-profile switch work
 # restart opencode
 ```
 
@@ -36,11 +38,11 @@ oc-profile switch work
 
 | Command | Description |
 |---|---|
-| `make <name> --current` | Save current auth as a named profile and set it active |
+| `make <name> --current` | Save the current `auth.json` as a named profile and set it active |
 | `make <name>` | Create an empty placeholder profile |
-| `switch <name>` | Switch to a profile (requires restart) |
-| `list` | List all profiles |
-| `which` | Print the active profile name |
+| `switch <name>` | Switch to a profile by repointing `auth.json` |
+| `list` | List all profiles; the active one is marked `(active)` |
+| `which` | Print the active profile name. If `auth.json` is still a regular file, it reports that no profile is active yet. |
 | `rename <old> <new>` | Rename a profile |
 | `delete <name>` | Delete a profile |
 | `help` | Show help |
@@ -68,6 +70,21 @@ Since OpenCode reads auth at startup, you need to restart it after switching.
 - Backs up `auth.json` automatically on first switch if it's a regular file
 - Warns if OpenCode is running when you switch
 - Validates profile names (alphanumeric, hyphens, underscores)
+
+## Testing and CI
+
+Run the local harness directly:
+
+```bash
+tests/opencode-profile.test.sh
+```
+
+GitHub Actions runs four checks on every push and pull request:
+
+- `bash -n` syntax check
+- `shellcheck`
+- `shfmt -d`
+- the deterministic shell test harness
 
 ## Note on token expiry
 
